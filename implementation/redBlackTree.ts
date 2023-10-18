@@ -20,13 +20,13 @@ export class TreeNode {
   // color = 0 -> red
   // color = 1 -> black
 
-  key: string;
+  key: TranslateNode;
   parent: TreeNode | undefined; // pointer to parent
   left: TreeNode | undefined;   // pointer to left tree node
   right: TreeNode | undefined;  // pointer to right tree node
   color: number;
 
-  constructor(key: string) {
+  constructor(key: TranslateNode) {
     this.key = key;
     this.parent = undefined;
     this.left = undefined;
@@ -41,7 +41,7 @@ export class RedBlackTree {
   numNodes: number;
 
   constructor() {
-    this.nil = new TreeNode('');
+    this.nil = new TreeNode(new TranslateNode("", ""));
     this.nil.color = 1;           // root and nil are black
     this.root = this.nil;
     this.numNodes = 0;
@@ -53,14 +53,14 @@ export class RedBlackTree {
     while (node !== this.nil) {
       // keep traversing the tree as long as the end of the tree is not met
       
-      if (node.key == key) return node;
-      else if (key < node.key) node = node.left!;   // we can garentee that these are NOT undefined because of how we insert new elements
-      else if (key > node.key) node = node.right!;
+      if (node.key.getWord() === key) return node;
+      else if (key < node.key.getWord()) node = node.left!;   // we can garentee that these are NOT undefined because of how we insert new elements
+      else if (key > node.key.getWord()) node = node.right!;
     }
   }
 
-  insert(key: string) {
-    let newNode: TreeNode = new TreeNode(key.toLowerCase());
+  insert(key: TranslateNode) {
+    let newNode: TreeNode = new TreeNode(key);
     newNode.left = this.nil;
     newNode.right = this.nil;
     let node = this.root;
@@ -70,7 +70,7 @@ export class RedBlackTree {
     while (node !== this.nil) {
       parent = node;
       
-      if (newNode.key < node.key) {
+      if (newNode.key.getWord() < node.key.getWord()) {
         node = node.left!;
       } else {
         node = node.right!;
@@ -84,10 +84,10 @@ export class RedBlackTree {
       this.root = newNode;
       this.numNodes++;
       return;
-    } else if (newNode.key < parent.key) {
+    } else if (newNode.key.getWord() < parent.key.getWord()) {
       parent.left = newNode;
     } else {
-      // (parent.key < newNode.key)
+      // (parent.key.getWord() < newNode.key.getWord())
       parent.right = newNode;
     }
 
@@ -227,7 +227,7 @@ export class RedBlackTree {
       }
 
       let s_color = node.color === 0 ? "RED" : "BLACK";
-      console.log(node.key + "(" + s_color + ")");
+      console.log(node.key.getWord() + "-" + node.key.getTranslate() + "(" + s_color + ")");
       this.printCall(node.left!, indent, false);
       this.printCall(node.right!, indent, true);
     }

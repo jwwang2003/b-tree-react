@@ -4,6 +4,7 @@ import { Cluster, hierarchy } from '@visx/hierarchy';
 import { HierarchyPointNode, HierarchyPointLink } from '@visx/hierarchy/lib/types';
 import { LinkVertical } from '@visx/shape';
 import { LinearGradient } from '@visx/gradient';
+import { RedBlackTree } from '../implementation/redBlackTree';
 
 const citrus = '#ddf163';
 const white = '#ffffff';
@@ -16,6 +17,9 @@ interface NodeShape {
   name: string;
   children?: NodeShape[];
 }
+
+const test = new RedBlackTree();
+test.printTree(); 
 
 const clusterData: NodeShape = {
   name: '$',
