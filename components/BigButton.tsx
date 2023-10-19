@@ -1,3 +1,5 @@
+import { useRef } from "react";
+
 export default function BigButton({
   children,
   placeHolder,
@@ -9,8 +11,9 @@ export default function BigButton({
   placeHolder: string;
   description?: string;
   href?: string;
-  onClick?: React.MouseEventHandler<HTMLAnchorElement>;
+  onClick?: React.MouseEventHandler<any>;
 }) {
+    
   return (
     <div className="grid text-center">
       <a

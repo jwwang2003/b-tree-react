@@ -1,10 +1,10 @@
-import React, { useMemo } from 'react';
+import React, { Children, useMemo } from 'react';
 import { Group } from '@visx/group';
 import { Cluster, hierarchy } from '@visx/hierarchy';
 import { HierarchyPointNode, HierarchyPointLink } from '@visx/hierarchy/lib/types';
 import { LinkVertical } from '@visx/shape';
 import { LinearGradient } from '@visx/gradient';
-import { RedBlackTree } from '../implementation/redBlackTree';
+import { RedBlackTree, TranslateNode, TranslateNodeInterface, TreeNode, TreeNodeInterface } from '../implementation/redBlackTree';
 
 const citrus = '#ddf163';
 const white = '#ffffff';
@@ -14,47 +14,44 @@ const merlinsbeard = '#f7f7f3';
 export const background = '#306c90';
 
 interface NodeShape {
-  name: string;
+  key: string;
   children?: NodeShape[];
 }
 
-const test = new RedBlackTree();
-test.printTree(); 
+// const clusterData: NodeShape = {
+//   key: '$',
+//   children: [
+//     {
+//       key: 'A',
+//       children: [
+//         { key: 'A1' },
+//         { key: 'A2' },
+//         {
+//           key: 'C',
+//           children: [
+//             {
+//               key: 'C1',
+//             },
+//           ],
+//         },
+//       ],
+//     },
+//     {
+//       key: 'B',
+//       children: [{ key: 'B1' }, { key: 'B2' }, { key: 'B3' }],
+//     },
+//     {
+//       key: 'X',
+//       children: [
+//         {
+//           key: 'Z',
+//         },
+//       ],
+//     },
+//   ],
+// };
 
-const clusterData: NodeShape = {
-  name: '$',
-  children: [
-    {
-      name: 'A',
-      children: [
-        { name: 'A1' },
-        { name: 'A2' },
-        {
-          name: 'C',
-          children: [
-            {
-              name: 'C1',
-            },
-          ],
-        },
-      ],
-    },
-    {
-      name: 'B',
-      children: [{ name: 'B1' }, { name: 'B2' }, { name: 'B3' }],
-    },
-    {
-      name: 'X',
-      children: [
-        {
-          name: 'Z',
-        },
-      ],
-    },
-  ],
-};
-
-function RootNode({ node }: { node: HierarchyPointNode<NodeShape> }) {
+function RootNode({ node }: { node: HierarchyPointNode<TreeNodeInterface> }) {
   const width = 40;
   const height = 20;
   const centerX = -width / 2;
@@ -71,13 +68,13 @@ function RootNode({ node }: { node: HierarchyPointNode<NodeShape> }) {
         style={{ pointerEvents: 'none' }}
         fill={background}
       >
-        {node.data.name}
+        {node.data.key.word}
       </text>
     </Group>
   );
 }
 
-function Node({ node }: { node: HierarchyPointNode<NodeShape> }) {
+function Node({ node }: { node: HierarchyPointNode<TreeNodeInterface> }) {
   const isRoot = node.depth === 0;
   const isParent = !!node.children;
 
@@ -91,7 +88,7 @@ function Node({ node }: { node: HierarchyPointNode<NodeShape> }) {
           fill={background}
           stroke={isParent ? white : citrus}
           onClick={() => {
-            alert(`clicked: ${JSON.stringify(node.data.name)}`);
+            alert(`clicked: ${JSON.stringify(node.data.key)}`);
           }}
         />
       )}
@@ -103,7 +100,7 @@ function Node({ node }: { node: HierarchyPointNode<NodeShape> }) {
         style={{ pointerEvents: 'none' }}
         fill={isParent ? white : citrus}
       >
-        {node.data.name}
+        {node.data.key.word}
       </text>
     </Group>
   );
@@ -115,10 +112,12 @@ export type DendrogramProps = {
   width: number;
   height: number;
   margin?: { top: number; right: number; bottom: number; left: number };
+  root: TreeNodeInterface
 };
 
-export default function TreeGraph({ width, height, margin = defaultMargin }: DendrogramProps) {
-  const data = useMemo(() => hierarchy<NodeShape>(clusterData), []);
+export default function TreeGraph({ width, height, margin = defaultMargin, root }: DendrogramProps) {
+
+  const data = useMemo(() => hierarchy<TreeNodeInterface>(root), [root]);
   const xMax = width - margin.left - margin.right;
   const yMax = height - margin.top - margin.bottom;
 
@@ -126,11 +125,11 @@ export default function TreeGraph({ width, height, margin = defaultMargin }: Den
     <svg width={width} height={height}>
       <LinearGradient id="top" from={green} to={aqua} />
       <rect width={width} height={height} rx={14} fill={background} />
-      <Cluster<NodeShape> root={data} size={[xMax, yMax]}>
+      <Cluster<TreeNodeInterface> root={data} size={[xMax, yMax]}>
         {(cluster) => (
           <Group top={margin.top} left={margin.left}>
             {cluster.links().map((link, i) => (
-              <LinkVertical<HierarchyPointLink<NodeShape>, HierarchyPointNode<NodeShape>>
+              <LinkVertical<HierarchyPointLink<TreeNodeInterface>, HierarchyPointNode<TreeNodeInterface>>
                 key={`cluster-link-${i}`}
                 data={link}
                 stroke={merlinsbeard}

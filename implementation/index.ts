@@ -1,18 +1,23 @@
-import { TranslateNode, TreeNode, RedBlackTree } from './redBlackTree';
+import { TranslateNode, RedBlackTree } from './redBlackTree';
 
-import { BilingualDictionary } from './BilingualDictionary';
+import { BilingualDictionary } from './bilingualDictionary';
 import * as fs from 'fs';
 
-let tree = new RedBlackTree()
-tree.insert(new TranslateNode('11', ''))
-tree.insert(new TranslateNode('2', ''))
-tree.insert(new TranslateNode('14', ''))
-tree.insert(new TranslateNode('1', ''))
-tree.insert(new TranslateNode('7', ''))
-tree.insert(new TranslateNode('5', ''))
-tree.insert(new TranslateNode('8', ''))
-tree.insert(new TranslateNode('15', ''))
-tree.printTree()
+// let tree = new RedBlackTree()
+// tree.insert(new TranslateNode('11', ''))
+// tree.insert(new TranslateNode('2', ''))
+// tree.insert(new TranslateNode('14', ''))
+// tree.insert(new TranslateNode('1', ''))
+// tree.insert(new TranslateNode('7', ''))
+// tree.insert(new TranslateNode('5', ''))
+// tree.insert(new TranslateNode('8', ''))
+// tree.insert(new TranslateNode('15', ''))
+// tree.printTree()
+// // console.log(tree.root)
+// tree.delete(tree.root, new TranslateNode('14', ''));
+// tree.printTree()
+// console.log(tree.search('5'))
+// tree.printInOrder(tree.root)
 
 // Console output
 //  R---- 14-(BLACK)
@@ -65,6 +70,15 @@ console.log(dict.search("curiosity"));
 console.log(dict.search("好奇心"));
 console.log(dict.searchChinese("炮塔"));
 console.log(dict.search('啊'));
+
+console.log(dict.deleteTranslation("curiosity"));
+console.log(dict.deleteTranslation("好奇心"));
+
+console.log(dict.search('curiosity'))
+console.log(dict.search('好奇心'))
+console.log(dict.search('好奇地'))
+
+console.log(dict.enToCnTree.printTree());
 
 // Console output
 // <ref *2> TreeNode {
