@@ -24,11 +24,6 @@ export default function Container({
         }
       }
     >
-      <div>
-        { title ? 
-          <p className="text-2xl font-semibold mb-4 underline leading-none tracking-tight text-gray-900 dark:text-white">{title}</p> 
-        : <></>}
-      </div>  
       {children}
     </div>
   );

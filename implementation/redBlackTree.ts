@@ -365,53 +365,66 @@ export class RedBlackTree {
 
   // Prints the current red black tree structure
   printTree () {
-    this.printCall(this.root, "", true);
+    const arr: string[] = [];
+    this.printCall(this.root, "", true, arr);
+    return arr;
   }
 
   // Debugging feature
-  printCall(node: TreeNode, indent: string, last: boolean) {
+  printCall(node: TreeNode, indent: string, last: boolean, result: string[]) {
     if (node !== this.nil) {
       let end = ' ';
-      process.stdout.write(indent + end);
+      let string = '';
+      string += indent + end;
+      // process.stdout.write(indent + end);
 
       if (last) {
         // console.log("R----", end=' ');
-        process.stdout.write("R----" + end);
+        // process.stdout.write("R----" + end);
+        string += "R----" + end;
         indent += "     ";
       } else {
         // console.log("L----", end=' ');
-        process.stdout.write("L----" + end);
+        // process.stdout.write("L----" + end);
+        string +=  "L----" + end;
         indent += " |    ";
       }
 
       let s_color = node.color === 0 ? "RED" : "BLACK";
-      console.log(node.key.word + " - " + node.key.translated + "(" + s_color + ")");
-      this.printCall(node.children[0]!, indent, false);
-      this.printCall(node.children[1]!, indent, true);
+      console.log(string + node.key.word + " - " + node.key.translated + "(" + s_color + ")");
+      result.push(string + node.key.word + " - " + node.key.translated + "(" + s_color + ")");
+      this.printCall(node.children[0]!, indent, false, result);
+      this.printCall(node.children[1]!, indent, true, result);
     }
   }
 
-  printPreOrder(node: TreeNode) {
+  printPreOrder(node: TreeNode, result: string[]) {
     if (node != this.nil) {
-      process.stdout.write(node.key.word + " - " + node.key.translated + " ");
-      this.printPreOrder(node.children[0]!);
-      this.printPreOrder(node.children[1]!);
+      // process.stdout.write(node.key.word + " - " + node.key.translated + " ");
+      console.log(node.key.word + " → " + node.key.translated);
+      result.push(node.key.word + " → " + node.key.translated);
+      this.printPreOrder(node.children[0]!, result);
+      this.printPreOrder(node.children[1]!, result);
     }
   }
 
-  printInOrder(node: TreeNode) {
+  printInOrder(node: TreeNode, result: string[]) {
     if (node != this.nil) {
-      this.printInOrder(node.children[0]!);
-      process.stdout.write(node.key.word + " - " + node.key.translated + " ");
-      this.printInOrder(node.children[1]!);
+      this.printInOrder(node.children[0]!, result);
+      // process.stdout.write(node.key.word + " - " + node.key.translated + " ");
+      console.log(node.key.word + " → " + node.key.translated);
+      result.push(node.key.word + " → " + node.key.translated);
+      this.printInOrder(node.children[1]!, result);
     }
   }
 
-  printPostOrder(node: TreeNode) {
+  printPostOrder(node: TreeNode, result: string[]) {
     if (node != this.nil) {
-      this.printPostOrder(node.children[0]!);
-      this.printPostOrder(node.children[1]!);
-      process.stdout.write(node.key.word + " - " + node.key.translated + " ");
+      this.printPostOrder(node.children[0]!, result);
+      this.printPostOrder(node.children[1]!, result);
+      // process.stdout.write(node.key.word + " - " + node.key.translated + " ");
+      console.log(node.key.word + " → " + node.key.translated);
+      result.push(node.key.word + " → " + node.key.translated);
     }
   }
 }

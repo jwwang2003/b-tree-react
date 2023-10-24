@@ -6,12 +6,14 @@ export default function BigButton({
   description,
   href,
   onClick,
+  type,
 }: {
   children?: any;
   placeHolder: string;
   description?: string;
   href?: string;
   onClick?: React.MouseEventHandler<any>;
+  type?: string
 }) {
     
   return (
@@ -22,6 +24,7 @@ export default function BigButton({
         className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
         target="_blank"
         rel="noopener noreferrer"
+        type={type}
       >
         <h2 className={`text-2xl font-semibold` + " " +
           (description ? "mb-3" : "")

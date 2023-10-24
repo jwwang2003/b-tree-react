@@ -1,70 +1,309 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, FormEvent, ChangeEventHandler, ChangeEvent } from "react";
 import TreeSelect from "@/components/TreeSelect";
 import Footer from "@/components/Footer";
 import Container from "@/components/Container";
-import TreeGraph from "@/components/TreeGraph";
-import ParentSize from "@visx/responsive/lib/components/ParentSize";
+// import TreeGraph from "@/components/TreeGraph";
+// import ParentSize from "@visx/responsive/lib/components/ParentSize";
 import TextInput from "@/components/TextInput";
 import BigButton from "@/components/BigButton";
 import Divider from "@/compoennts/Divider";
+import toast, { Toaster } from "react-hot-toast";
 import { BilingualDictionary } from "@/implementation/bilingualDictionary";
-import { RedBlackTree, TranslateNode, TreeNode, TreeNodeInterface} from '../implementation/redBlackTree';
+import Output from "@/components/Output";
 
 export default function Home() {
+  const [outputMode, setOutputMode] = useState(0);
+  const [dictChanged, setDictChanged] = useState<boolean[]>([]);
+  const [outputLog, setOutputLog] = useState<string[][]>([[], [], [], [], []]);
+
   const [current, setCurrent] = useState("");
-  const [dictionary, setDictionary] = useState<BilingualDictionary>(new BilingualDictionary);
+  const [translate, setTranslate] = useState("");
+  const [dictionary, setDictionary] = useState<BilingualDictionary>(
+    new BilingualDictionary()
+  );
 
-  const [test, setTest] = useState<TreeNodeInterface>({
-    key: { word: 'test', translated: '测试' },
-    children: [
-      {
-        key: { word: 'another test', translated: '另一个测试' },
-        children: [],
-        color: 0
-      },
-      {
-        key: { word: 'another test', translated: '另一个测试' },
-        children: [],
-        color: 0
-      }
-    ],
-    color: 0
-  })
+  const inputExternalFileRef = useRef<any>();
+  const inputExternalBatchFileRef = useRef<any>();
 
-  const inputOpenFileRef = useRef<any>();
+  const [submitType, setSubmitType] = useState("");
 
-  useEffect(() => {
-    setDictionary(new BilingualDictionary);
-  }, [])
+  const handleSingleTranslate = (e: FormEvent<HTMLFormElement> | undefined) => {
+    if(e != undefined) e.preventDefault();
 
-  const showOpenFileDlg = () => {
-    inputOpenFileRef.current!.click();
+    if(translate == "") {
+      toast.error("Translate cannot be empty");
+      return;
+    }
+
+    const start = performance.now();
+    const translated = dictionary.search(translate);
+    const end = performance.now();
+    console.log(`Execution time: ${end - start} ms`);
+
+    if (translated === undefined) {
+      // Debugging purposes
+      // console.log("NOT FOUND");
+      // console.log(translated);
+
+      toast.error("Word not found");
+    } else {
+      const A = translated.key.word;
+      const B = translated.key.translated;
+
+      toast.success("Word found");
+      setTranslate(A + " →  " + B);
+    }
   };
 
-  const handleFileChange = (event: any) => {
+  // -=-=-=-=-=-=-=-=-=-=- FILE I/O -=-=-=-=-=-=-=-=-=-=-
+
+  const toggleDictionaryChange = () => {
+    for (let i = 0; i < 5; ++i) {
+      dictChanged[i] = true;
+    }
+    setDictChanged([...dictChanged]);
+  }
+
+  const handleExternalFile = (event: ChangeEvent<HTMLInputElement> | undefined) => {
+    console.log("-=-=-=-=-=-=-ENTERED FILE INPUT METHOD-=-=-=-=-=-=-");
+    if (event == undefined || event.target.files == undefined) {
+      toast.error("File selection error");
+      return;
+    }
+
     const file = event.target.files[0];
     console.log(file);
 
     var reader = new FileReader();
-    reader.onload = function(progressEvent) {
+    reader.onload = function (progressEvent) {
       // Entire file
       const text = this.result;
 
       // By lines
-      var lines = text!.toString().split('\r\n');
-      for (var line = 0; line < lines.length; line++) {
-        let words = lines[line].split(' ');
-        console.log(words[0], words[1]);
+      let lines = text!.toString().split("\n");
+      for (let line = 0; line < lines.length; line++) {
+        let words = lines[line].trim().split(" ");
+        console.log(words);
         dictionary!.addTranslation(words[0], words[1]);
       }
 
-      console.log(dictionary!.search('crossword'));
+      toggleDictionaryChange();
+      
+      setDictionary(dictionary);
+      toast.success("Imported " + lines.length + " words");
+      console.log("-=-=-=-=-=-=-EXITED FILE INPUT METHOD-=-=-=-=-=-=-");
     };
 
     reader.readAsText(file);
   };
+
+  const handleExternalBatchFile = (event: ChangeEvent<HTMLInputElement> | undefined) => {
+    console.log("-=-=-=-=-=-=-ENTERED BATCH METHOD-=-=-=-=-=-=-");
+    if (event == undefined || event.target.files == undefined) {
+      toast.error("Batch file selection error");
+      return;
+    }
+
+    const file = event.target.files[0];
+    console.log(file);
+
+    var reader = new FileReader();
+    reader.onload = function (progressEvent) {
+      const text = this.result;
+
+      let mode = 0;
+      let ref = [
+        "INSERTION MODE",
+        "DELETION MODE",
+        "SERACH MODE",
+      ]
+
+      let lines = text!.toString().split("\n");
+      for (let line = 0; line < lines.length; line++) {
+        if(lines[line] == '') continue;
+        if (line == 0) {
+          switch(lines[line]) {
+            case 'INSERT': mode = 0; break;
+            case 'DELETE': mode = 1; break;
+            case 'SEARCH': mode = 2; break;
+          }
+          console.log(ref[mode]);
+          console.log("Beginnging to process batch file...");
+          continue;
+        }
+
+        let words = lines[line].trim().split(" ");
+        console.log(words);
+
+        switch(mode) {
+          case 0: break;
+          case 1: break;
+          case 2: break;
+        }
+        
+        // dictionary!.addTranslation(words[0], words[1]);
+      }
+
+      toggleDictionaryChange();
+      
+      setDictionary(dictionary);
+      toast.success("Batch processed " + lines.length + " items");
+
+      console.log("-=-=-=-=-=-=-EXITED BATCH METHOD-=-=-=-=-=-=-");
+    };
+
+    reader.readAsText(file);
+  }
+
+  // -=-=-=-=-=-=-=-=-=-=- END OF FILE I/O -=-=-=-=-=-=-=-=-=-=-
+
+  // -=-=-=-=-=-=-=-=-=-=- START OF ADD/DELETE -=-=-=-=-=-=-=-=-=-=-
+
+  const handleAddDelete = (e: FormEvent<HTMLFormElement> | undefined) => {
+    if(e != undefined) e.preventDefault();
+    else return;
+
+    const target = e.target as typeof e.target & {
+      english: { value: string };
+      chinese: { value: string };
+      submitType: { value: string };
+    };
+
+    const english = target.english.value;
+    const chinese = target.chinese.value;
+    const type = target.submitType.value;
+
+    if (type == 'Insert') {
+      if (english == '' || chinese == '') {
+        toast.error("One (or more) of the inputs are blank");
+        return;
+      }
+
+      const result1 = dictionary.search(english);
+      const result2 = dictionary.search(chinese);
+
+      if(result1 || result2) {
+        toast.error("Word exists");
+        return;
+      }
+
+      dictionary!.addTranslation(english, chinese);
+      setDictionary(dictionary);
+  
+      toast.success("Translation for " + english + " → " + chinese + " inserted");
+      toggleDictionaryChange();
+    } else if (type == 'Delete') {
+      if (!(english != '' || chinese != '')) {
+        toast.error("At least one input must be filled");
+        return;
+      }
+
+      const result = dictionary!.deleteTranslation(english);
+
+      if (result) {
+        toggleDictionaryChange();
+        toast.success("Translation for " + english + " deleted");
+      } else {
+        toast.error("Translation for " + english + " not found");
+      }
+
+      
+    } else {
+      toast.error("Unrecongized command " + type);
+    }
+  }
+
+  //  -=-=-=-=-=-=-=-=-=-=- END OF ADD/DELETE -=-=-=-=-=-=-=-=-=-=-
+  
+  const handlePrintPreorder = () => {
+    const mode = 0;
+    outputHelper(mode);
+  };
+
+  const handlePrintInOrder = () => {
+    const mode = 1;
+    outputHelper(mode);
+  };
+
+  const handlePrintPostOrder = () => {
+    const mode = 2;
+    outputHelper(mode);
+  };
+
+
+  const handlePrintTree = () => {
+    const mode = 3;
+    outputHelper(mode);
+  };
+
+  const handleShowResults = () => {
+
+  }
+
+  const outputHelper = (mode: number) => {
+    let output: string = '';
+
+    if (outputMode == mode && dictChanged[mode] == false) {
+      // still the same page and the dictionary has not been mofidied, nothing needs to be done
+      return;
+    }
+
+    if (dictChanged[mode] == true) {
+      let result: string[] = [];
+      
+      switch(mode) {
+        case 0: dictionary.enToCnTree.printPreOrder(dictionary.enToCnTree.root, result); break;
+        case 1: dictionary.enToCnTree.printInOrder(dictionary.enToCnTree.root, result); break;
+        case 2: dictionary.enToCnTree.printPostOrder(dictionary.enToCnTree.root, result); break;
+        case 3: result = dictionary.enToCnTree.printTree(); break;
+        case 4: break;
+        default: break;
+      }
+
+      switch(mode) {
+        case 0: output += 'Preorder'; break;
+        case 1: output += 'Inorder'; break;
+        case 2: output += 'Postorder'; break;
+        case 3: output += 'Tree'; break;
+        case 4: break;
+        default: break;
+      }
+      
+      outputLog[mode] = result;
+      setOutputLog([...outputLog]);
+      dictChanged[mode] = false;
+      setDictChanged([...dictChanged]);
+      toast(output + " updated");
+    }
+
+    if (outputMode != mode) {
+      setOutputMode(mode);
+
+      switch(mode) {
+        case 0: console.log("-=-=-=-=-=-=-PREORDER-=-=-=-=-=-=-"); break;
+        case 1: console.log("-=-=-=-=-=-=-INORDER-=-=-=-=-=-=-"); break;
+        case 2: console.log("-=-=-=-=-=-=-POSTORDER-=-=-=-=-=-=-"); break;
+        case 3: console.log("-=-=-=-=-=-=-TREE-=-=-=-=-=-=-"); break;
+        case 4: break;
+        default: break;
+      }
+      
+      console.log(outputLog[mode]);
+
+      let output = '';
+      switch(mode) {
+        case 0: output += 'Preorder'; break;
+        case 1: output += 'Inorder'; break;
+        case 2: output += 'Postorder'; break;
+        case 3: output += 'Tree'; break;
+        case 4: break;
+        default: break;
+      }
+      toast.success(output + " console logged");
+    }
+  }
 
   return (
     <>
@@ -74,33 +313,60 @@ export default function Home() {
           <div className="flex w-full">
             <section className="p-2 w-full space-y-4">
               <input
-                ref={inputOpenFileRef}
+                ref={inputExternalFileRef}
                 type="file"
                 style={{ display: "none" }}
-                onChange={handleFileChange}
+                onChange={handleExternalFile}
               />
               <BigButton
-                onClick={showOpenFileDlg}
+                onClick={(e) => inputExternalFileRef.current!.click()}
                 placeHolder="Import"
                 description="Import data from a text file"
               />
+
+              <input
+                ref={inputExternalBatchFileRef}
+                type="file"
+                style={{ display: "none" }}
+                onChange={handleExternalBatchFile}
+              />
+              <BigButton
+                onClick={(e) => inputExternalBatchFileRef.current!.click()}
+                placeHolder="Batch"
+                description="Batch manipulate data"
+              />
+
               <Divider />
 
-              <div className="flex w-full flex-col items-center p-4 space-y-4">
-                <TextInput placeHolder="English" />
-                <TextInput placeHolder="Chinese" />
-              </div>
-
-              <div className="flex w-full justify-center">
-                <div className="flex-row w-fit border border-gray-200 rounded-lg overflow-hidden divide-x">
-                  <button className="bg-white hover:bg-gray-200 text-gray-800 py-2 px-4">
-                    Add
-                  </button>
-                  <button className="bg-white hover:bg-gray-200 text-gray-800 py-2 px-4">
-                    Delete
-                  </button>
+              <form onSubmit={handleAddDelete} className="flex w-full flex-col items-center p-4 space-y-4">
+                <TextInput
+                  placeHolder="English"
+                  name="english"
+                />
+                <TextInput
+                  placeHolder="Chinese"
+                  name="chinese"
+                />
+                <div className="flex w-full justify-center">
+                  <div className="flex-row w-fit border border-gray-200 rounded-lg overflow-hidden divide-x">
+                    <button
+                      onClick={() => setSubmitType("Insert")}
+                      className="bg-white hover:bg-gray-200 text-gray-800 py-2 px-4"
+                    >
+                      Insert
+                    </button>
+                    <button
+                      onClick={() => setSubmitType("Delete")}
+                      className="bg-white hover:bg-gray-200 text-gray-800 py-2 px-4"
+                    >
+                      Delete
+                    </button>
+                    <input type="hidden" name="submitType" value={submitType}></input>
+                  </div>
                 </div>
-              </div>
+              </form>
+
+              
             </section>
 
             <section className="p-2 w-full">
@@ -109,14 +375,26 @@ export default function Home() {
 
                 <Divider />
 
-                <TextInput placeHolder="Translate" />
-                <BigButton placeHolder="Translate" />
+                <form onSubmit={handleSingleTranslate} className="space-y-4">
+                  <TextInput
+                    value={translate}
+                    setValue={setTranslate}
+                    placeHolder="Translate"
+                  />
+                  <BigButton
+                    onClick={handleSingleTranslate}
+                    placeHolder="Translate"
+                    type="submit"
+                  />
+                </form>
 
                 <Divider />
-
-                <TextInput placeHolder="Search from" />
-                <TextInput placeHolder="To" />
-                <BigButton placeHolder="Search" />
+                
+                <form onSubmit={(e) => e.preventDefault()} className="space-y-4">
+                  <TextInput placeHolder="Search from" />
+                  <TextInput placeHolder="To" />
+                  <BigButton type="submit" placeHolder="Search" />
+                </form>
               </div>
             </section>
           </div>
@@ -126,14 +404,26 @@ export default function Home() {
         <Container title={"Output"}>{/* <textarea></textarea> */}</Container>
 
         {/* Tree Graph Component */}
-        <Container fullWidth={true} extendedHeight={true}>
-          <ParentSize>
-            {({ width, height }) => <TreeGraph width={width} height={height} root={dictionary.enToCnTree.root} />}
-          </ParentSize>
+        <Container fullWidth={true}>
+          <Output handlePrintInOrder={handlePrintInOrder} handlePrintPostOrder={handlePrintPostOrder} handlePrintPreOrder={handlePrintPreorder} handlePrintTree={handlePrintTree} handleShowResults={handleShowResults} mode={outputMode} log={outputLog} dictionaryChange={dictChanged}/>
+
+          {/* This graph UI library is way to laggy for big graphs, therefore only a text based method would be used */}
+          {/* <ParentSize>
+            {({ width, height }) => (
+              <TreeGraph
+                width={width}
+                height={height}
+                dictionary={dictionary}
+              />
+            )}
+          </ParentSize> */}
         </Container>
       </main>
 
       <Footer />
+      <div>
+        <Toaster />
+      </div>
     </>
   );
 }

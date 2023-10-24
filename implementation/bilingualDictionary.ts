@@ -31,15 +31,15 @@ export class BilingualDictionary {
 
     if (test == 1 && search1 !== undefined) {
       // the key is a word in the English dictionary that translates to Chinese
-      const english = new TranslateNode(search1.key.getWord(), '');
-      const chinese = new TranslateNode(search1.key.getTranslate(), '');
+      const english = new TranslateNode(search1.key.word, '');
+      const chinese = new TranslateNode(search1.key.translated, '');
       result1 = this.enToCnTree.delete(enRoot, english);
       result2 = this.cnToEnTree.delete(cnRoot, chinese);
     }
     else if (test == 0 && search2 !== undefined) {
       // the key is a word in the Chinese dictionary that translates to English
-      const english = new TranslateNode(search2.key.getTranslate(), '');
-      const chinese = new TranslateNode(search2.key.getWord(), '');
+      const english = new TranslateNode(search2.key.translated, '');
+      const chinese = new TranslateNode(search2.key.word, '');
       result1 = this.enToCnTree.delete(enRoot, english);
       result2 = this.cnToEnTree.delete(cnRoot, chinese);
     }
