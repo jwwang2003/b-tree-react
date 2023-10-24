@@ -391,7 +391,7 @@ export class RedBlackTree {
       }
 
       let s_color = node.color === 0 ? "RED" : "BLACK";
-      console.log(string + node.key.word + " - " + node.key.translated + "(" + s_color + ")");
+      // console.log(string + node.key.word + " - " + node.key.translated + "(" + s_color + ")");
       result.push(string + node.key.word + " - " + node.key.translated + "(" + s_color + ")");
       this.printCall(node.children[0]!, indent, false, result);
       this.printCall(node.children[1]!, indent, true, result);
@@ -401,7 +401,7 @@ export class RedBlackTree {
   printPreOrder(node: TreeNode, result: string[]) {
     if (node != this.nil) {
       // process.stdout.write(node.key.word + " - " + node.key.translated + " ");
-      console.log(node.key.word + " → " + node.key.translated);
+      // console.log(node.key.word + " → " + node.key.translated);
       result.push(node.key.word + " → " + node.key.translated);
       this.printPreOrder(node.children[0]!, result);
       this.printPreOrder(node.children[1]!, result);
@@ -412,19 +412,39 @@ export class RedBlackTree {
     if (node != this.nil) {
       this.printInOrder(node.children[0]!, result);
       // process.stdout.write(node.key.word + " - " + node.key.translated + " ");
-      console.log(node.key.word + " → " + node.key.translated);
+      // console.log(node.key.word + " → " + node.key.translated);
       result.push(node.key.word + " → " + node.key.translated);
       this.printInOrder(node.children[1]!, result);
     }
   }
-
+ 
   printPostOrder(node: TreeNode, result: string[]) {
     if (node != this.nil) {
       this.printPostOrder(node.children[0]!, result);
       this.printPostOrder(node.children[1]!, result);
       // process.stdout.write(node.key.word + " - " + node.key.translated + " ");
-      console.log(node.key.word + " → " + node.key.translated);
+      // console.log(node.key.word + " → " + node.key.translated);
       result.push(node.key.word + " → " + node.key.translated);
+    }
+  }
+
+  printInOrder2(node: TreeNode, startNode: TreeNode, endNode: TreeNode, result: string[], startFound: boolean[]) {
+    if (node != this.nil) {
+      this.printInOrder2(node.children[0]!, startNode, endNode, result, startFound);
+      // process.stdout.write(node.key.word + " - " + node.key.translated + " ");
+      // console.log(node.key.word + " → " + node.key.translated);
+      if (node == startNode) {
+        startFound[0] = true;
+      }
+      if (startFound[0]) {
+        result.push(node.key.word + " → " + node.key.translated);
+      }
+      if(node == endNode) {
+        startFound[0] = false;
+        return;
+      }
+      
+      this.printInOrder2(node.children[1]!, startNode, endNode, result, startFound);
     }
   }
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, FormEvent, ChangeEventHandler, ChangeEvent } from "react";
+import { useState, useRef, FormEvent, ChangeEvent } from "react";
 import TreeSelect from "@/components/TreeSelect";
 import Footer from "@/components/Footer";
 import Container from "@/components/Container";
@@ -26,13 +26,15 @@ export default function Home() {
 
   const inputExternalFileRef = useRef<any>();
   const inputExternalBatchFileRef = useRef<any>();
+  const inputSerachRef = useRef<any>();
+  const inputRangeSearchRef = useRef<any>();
 
   const [submitType, setSubmitType] = useState("");
 
-  const handleSingleTranslate = (e: FormEvent<HTMLFormElement> | undefined) => {
-    if(e != undefined) e.preventDefault();
+  const handleSearch = (e: FormEvent<HTMLFormElement> | undefined) => {
+    if (e != undefined) e.preventDefault();
 
-    if(translate == "") {
+    if (translate == "") {
       toast.error("Translate cannot be empty");
       return;
     }
@@ -57,6 +59,49 @@ export default function Home() {
     }
   };
 
+  const handleRangeSearch = (e: FormEvent<HTMLFormElement> | undefined) => {
+    if (e != undefined) e.preventDefault();
+    else return;
+
+    const target = e.target as typeof e.target & {
+      start: { value: string };
+      end: { value: string };
+    };
+
+    const startKey = target.start.value;
+    const endKey = target.end.value;
+
+    if (startKey == "" || endKey == "") {
+      toast.error("One (or more) of the input(s) is empty");
+      return;
+    }
+
+    console.log("-=-=-=-=-=-=-ENTERED RANGE SEARCH-=-=-=-=-=-=-");
+    const result1 = dictionary.search(startKey);
+    const result2 = dictionary.search(endKey);
+
+    // DEBUGGING
+    // console.log(result1);
+    // console.log(result2);
+
+    // console.log(result1 == result2);
+    // console.log(result1 === result2);
+
+    if (!result1 || !result2) {
+      toast.error(
+        "One (or more) of the word(s) does not exist in the dictionary"
+      );
+      return;
+    }
+    let result: string[] = [];
+    dictionary.enToCnTree.printInOrder2(dictionary.enToCnTree.root, result1, result2, result, [false]);
+    console.log(result);
+    outputLog[outputMode] = result;
+    setOutputLog([...outputLog])
+    toast.success("Found " + result.length + " words");
+    console.log("-=-=-=-=-=-=-EXITED RANGE SEARCH-=-=-=-=-=-=-");
+  };
+
   // -=-=-=-=-=-=-=-=-=-=- FILE I/O -=-=-=-=-=-=-=-=-=-=-
 
   const toggleDictionaryChange = () => {
@@ -64,9 +109,11 @@ export default function Home() {
       dictChanged[i] = true;
     }
     setDictChanged([...dictChanged]);
-  }
+  };
 
-  const handleExternalFile = (event: ChangeEvent<HTMLInputElement> | undefined) => {
+  const handleExternalFile = (
+    event: ChangeEvent<HTMLInputElement> | undefined
+  ) => {
     console.log("-=-=-=-=-=-=-ENTERED FILE INPUT METHOD-=-=-=-=-=-=-");
     if (event == undefined || event.target.files == undefined) {
       toast.error("File selection error");
@@ -90,7 +137,7 @@ export default function Home() {
       }
 
       toggleDictionaryChange();
-      
+
       setDictionary(dictionary);
       toast.success("Imported " + lines.length + " words");
       console.log("-=-=-=-=-=-=-EXITED FILE INPUT METHOD-=-=-=-=-=-=-");
@@ -99,7 +146,9 @@ export default function Home() {
     reader.readAsText(file);
   };
 
-  const handleExternalBatchFile = (event: ChangeEvent<HTMLInputElement> | undefined) => {
+  const handleExternalBatchFile = (
+    event: ChangeEvent<HTMLInputElement> | undefined
+  ) => {
     console.log("-=-=-=-=-=-=-ENTERED BATCH METHOD-=-=-=-=-=-=-");
     if (event == undefined || event.target.files == undefined) {
       toast.error("Batch file selection error");
@@ -114,20 +163,22 @@ export default function Home() {
       const text = this.result;
 
       let mode = 0;
-      let ref = [
-        "INSERTION MODE",
-        "DELETION MODE",
-        "SERACH MODE",
-      ]
+      let ref = ["INSERTION MODE", "DELETION MODE", "SERACH MODE"];
 
       let lines = text!.toString().split("\n");
       for (let line = 0; line < lines.length; line++) {
-        if(lines[line] == '') continue;
+        if (lines[line] == "") continue;
         if (line == 0) {
-          switch(lines[line]) {
-            case 'INSERT': mode = 0; break;
-            case 'DELETE': mode = 1; break;
-            case 'SEARCH': mode = 2; break;
+          switch (lines[line]) {
+            case "INSERT":
+              mode = 0;
+              break;
+            case "DELETE":
+              mode = 1;
+              break;
+            case "SEARCH":
+              mode = 2;
+              break;
           }
           console.log(ref[mode]);
           console.log("Beginnging to process batch file...");
@@ -137,17 +188,20 @@ export default function Home() {
         let words = lines[line].trim().split(" ");
         console.log(words);
 
-        switch(mode) {
-          case 0: break;
-          case 1: break;
-          case 2: break;
+        switch (mode) {
+          case 0:
+            break;
+          case 1:
+            break;
+          case 2:
+            break;
         }
-        
+
         // dictionary!.addTranslation(words[0], words[1]);
       }
 
       toggleDictionaryChange();
-      
+
       setDictionary(dictionary);
       toast.success("Batch processed " + lines.length + " items");
 
@@ -155,14 +209,14 @@ export default function Home() {
     };
 
     reader.readAsText(file);
-  }
+  };
 
   // -=-=-=-=-=-=-=-=-=-=- END OF FILE I/O -=-=-=-=-=-=-=-=-=-=-
 
   // -=-=-=-=-=-=-=-=-=-=- START OF ADD/DELETE -=-=-=-=-=-=-=-=-=-=-
 
   const handleAddDelete = (e: FormEvent<HTMLFormElement> | undefined) => {
-    if(e != undefined) e.preventDefault();
+    if (e != undefined) e.preventDefault();
     else return;
 
     const target = e.target as typeof e.target & {
@@ -175,8 +229,8 @@ export default function Home() {
     const chinese = target.chinese.value;
     const type = target.submitType.value;
 
-    if (type == 'Insert') {
-      if (english == '' || chinese == '') {
+    if (type == "Insert") {
+      if (english == "" || chinese == "") {
         toast.error("One (or more) of the inputs are blank");
         return;
       }
@@ -184,18 +238,20 @@ export default function Home() {
       const result1 = dictionary.search(english);
       const result2 = dictionary.search(chinese);
 
-      if(result1 || result2) {
+      if (result1 || result2) {
         toast.error("Word exists");
         return;
       }
 
       dictionary!.addTranslation(english, chinese);
       setDictionary(dictionary);
-  
-      toast.success("Translation for " + english + " → " + chinese + " inserted");
+
+      toast.success(
+        "Translation for " + english + " → " + chinese + " inserted"
+      );
       toggleDictionaryChange();
-    } else if (type == 'Delete') {
-      if (!(english != '' || chinese != '')) {
+    } else if (type == "Delete") {
+      if (!(english != "" || chinese != "")) {
         toast.error("At least one input must be filled");
         return;
       }
@@ -208,15 +264,13 @@ export default function Home() {
       } else {
         toast.error("Translation for " + english + " not found");
       }
-
-      
     } else {
       toast.error("Unrecongized command " + type);
     }
-  }
+  };
 
   //  -=-=-=-=-=-=-=-=-=-=- END OF ADD/DELETE -=-=-=-=-=-=-=-=-=-=-
-  
+
   const handlePrintPreorder = () => {
     const mode = 0;
     outputHelper(mode);
@@ -232,18 +286,18 @@ export default function Home() {
     outputHelper(mode);
   };
 
-
   const handlePrintTree = () => {
     const mode = 3;
     outputHelper(mode);
   };
 
   const handleShowResults = () => {
-
-  }
+    const mode = 4;
+    outputHelper(mode);
+  };
 
   const outputHelper = (mode: number) => {
-    let output: string = '';
+    let output: string = "";
 
     if (outputMode == mode && dictChanged[mode] == false) {
       // still the same page and the dictionary has not been mofidied, nothing needs to be done
@@ -252,25 +306,54 @@ export default function Home() {
 
     if (dictChanged[mode] == true) {
       let result: string[] = [];
-      
-      switch(mode) {
-        case 0: dictionary.enToCnTree.printPreOrder(dictionary.enToCnTree.root, result); break;
-        case 1: dictionary.enToCnTree.printInOrder(dictionary.enToCnTree.root, result); break;
-        case 2: dictionary.enToCnTree.printPostOrder(dictionary.enToCnTree.root, result); break;
-        case 3: result = dictionary.enToCnTree.printTree(); break;
-        case 4: break;
-        default: break;
+
+      switch (mode) {
+        case 0:
+          dictionary.enToCnTree.printPreOrder(
+            dictionary.enToCnTree.root,
+            result
+          );
+          break;
+        case 1:
+          dictionary.enToCnTree.printInOrder(
+            dictionary.enToCnTree.root,
+            result
+          );
+          break;
+        case 2:
+          dictionary.enToCnTree.printPostOrder(
+            dictionary.enToCnTree.root,
+            result
+          );
+          break;
+        case 3:
+          result = dictionary.enToCnTree.printTree();
+          break;
+        case 4:
+          break;
+        default:
+          break;
       }
 
-      switch(mode) {
-        case 0: output += 'Preorder'; break;
-        case 1: output += 'Inorder'; break;
-        case 2: output += 'Postorder'; break;
-        case 3: output += 'Tree'; break;
-        case 4: break;
-        default: break;
+      switch (mode) {
+        case 0:
+          output += "Preorder";
+          break;
+        case 1:
+          output += "Inorder";
+          break;
+        case 2:
+          output += "Postorder";
+          break;
+        case 3:
+          output += "Tree";
+          break;
+        case 4:
+          break;
+        default:
+          break;
       }
-      
+
       outputLog[mode] = result;
       setOutputLog([...outputLog]);
       dictChanged[mode] = false;
@@ -281,29 +364,51 @@ export default function Home() {
     if (outputMode != mode) {
       setOutputMode(mode);
 
-      switch(mode) {
-        case 0: console.log("-=-=-=-=-=-=-PREORDER-=-=-=-=-=-=-"); break;
-        case 1: console.log("-=-=-=-=-=-=-INORDER-=-=-=-=-=-=-"); break;
-        case 2: console.log("-=-=-=-=-=-=-POSTORDER-=-=-=-=-=-=-"); break;
-        case 3: console.log("-=-=-=-=-=-=-TREE-=-=-=-=-=-=-"); break;
-        case 4: break;
-        default: break;
+      switch (mode) {
+        case 0:
+          console.log("-=-=-=-=-=-=-PREORDER-=-=-=-=-=-=-");
+          break;
+        case 1:
+          console.log("-=-=-=-=-=-=-INORDER-=-=-=-=-=-=-");
+          break;
+        case 2:
+          console.log("-=-=-=-=-=-=-POSTORDER-=-=-=-=-=-=-");
+          break;
+        case 3:
+          console.log("-=-=-=-=-=-=-TREE-=-=-=-=-=-=-");
+          break;
+        case 4:
+          break;
+        default:
+          break;
       }
-      
+
+      let output = "";
+      switch (mode) {
+        case 0:
+          output += "Preorder";
+          break;
+        case 1:
+          output += "Inorder";
+          break;
+        case 2:
+          output += "Postorder";
+          break;
+        case 3:
+          output += "Tree";
+          break;
+        // case 4: output += 'Results'; break;
+        case 4:
+          return;
+        default:
+          break;
+      }
+
       console.log(outputLog[mode]);
 
-      let output = '';
-      switch(mode) {
-        case 0: output += 'Preorder'; break;
-        case 1: output += 'Inorder'; break;
-        case 2: output += 'Postorder'; break;
-        case 3: output += 'Tree'; break;
-        case 4: break;
-        default: break;
-      }
       toast.success(output + " console logged");
     }
-  }
+  };
 
   return (
     <>
@@ -338,15 +443,12 @@ export default function Home() {
 
               <Divider />
 
-              <form onSubmit={handleAddDelete} className="flex w-full flex-col items-center p-4 space-y-4">
-                <TextInput
-                  placeHolder="English"
-                  name="english"
-                />
-                <TextInput
-                  placeHolder="Chinese"
-                  name="chinese"
-                />
+              <form
+                onSubmit={handleAddDelete}
+                className="flex w-full flex-col items-center p-4 space-y-4"
+              >
+                <TextInput placeHolder="English" name="english" />
+                <TextInput placeHolder="Chinese" name="chinese" />
                 <div className="flex w-full justify-center">
                   <div className="flex-row w-fit border border-gray-200 rounded-lg overflow-hidden divide-x">
                     <button
@@ -361,12 +463,14 @@ export default function Home() {
                     >
                       Delete
                     </button>
-                    <input type="hidden" name="submitType" value={submitType}></input>
+                    <input
+                      type="hidden"
+                      name="submitType"
+                      value={submitType}
+                    ></input>
                   </div>
                 </div>
               </form>
-
-              
             </section>
 
             <section className="p-2 w-full">
@@ -375,25 +479,39 @@ export default function Home() {
 
                 <Divider />
 
-                <form onSubmit={handleSingleTranslate} className="space-y-4">
+                <form
+                  onSubmit={handleSearch}
+                  ref={inputSerachRef}
+                  className="space-y-4"
+                >
                   <TextInput
                     value={translate}
                     setValue={setTranslate}
                     placeHolder="Translate"
                   />
                   <BigButton
-                    onClick={handleSingleTranslate}
-                    placeHolder="Translate"
                     type="submit"
+                    placeHolder="Translate"
+                    onClick={() => inputSerachRef.current.requestSubmit()}
                   />
                 </form>
 
                 <Divider />
-                
-                <form onSubmit={(e) => e.preventDefault()} className="space-y-4">
-                  <TextInput placeHolder="Search from" />
-                  <TextInput placeHolder="To" />
-                  <BigButton type="submit" placeHolder="Search" />
+
+                <form
+                  onSubmit={handleRangeSearch}
+                  ref={inputRangeSearchRef}
+                  className="space-y-4"
+                >
+                  <TextInput
+                    placeHolder="Search from"
+                    name="start"
+                  />
+                  <TextInput placeHolder="To" name="end" />
+                  <BigButton
+                    placeHolder="Search"
+                    onClick={() => inputRangeSearchRef.current.requestSubmit()}
+                  />
                 </form>
               </div>
             </section>
@@ -405,7 +523,16 @@ export default function Home() {
 
         {/* Tree Graph Component */}
         <Container fullWidth={true}>
-          <Output handlePrintInOrder={handlePrintInOrder} handlePrintPostOrder={handlePrintPostOrder} handlePrintPreOrder={handlePrintPreorder} handlePrintTree={handlePrintTree} handleShowResults={handleShowResults} mode={outputMode} log={outputLog} dictionaryChange={dictChanged}/>
+          <Output
+            handlePrintInOrder={handlePrintInOrder}
+            handlePrintPostOrder={handlePrintPostOrder}
+            handlePrintPreOrder={handlePrintPreorder}
+            handlePrintTree={handlePrintTree}
+            handleShowResults={handleShowResults}
+            mode={outputMode}
+            log={outputLog}
+            dictionaryChange={dictChanged}
+          />
 
           {/* This graph UI library is way to laggy for big graphs, therefore only a text based method would be used */}
           {/* <ParentSize>
