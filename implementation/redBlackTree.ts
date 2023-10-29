@@ -203,7 +203,7 @@ export class RedBlackTree {
       y.color = z.color;
     }
 
-    if (ogColor == 0) {
+    if (ogColor == 1) {
       this.deleteFix(x);
     }
 
@@ -211,67 +211,67 @@ export class RedBlackTree {
   }
 
   deleteFix(node: TreeNode) {
-    while (node != this.root && node.color == 0) {
+    while (node != this.root && node.color == 1) {
       if (node == node.parent!.children[0]) {
         let s = node.parent!.children[1]!;
 
-        if (s.color == 1) {
-          s.color = 0;
-          node.parent!.color = 1;
+        if (s.color == 0) {
+          s.color = 1;
+          node.parent!.color = 0;
           this.leftRotate(node.parent!);
           s = node.parent!.children[1]!;
         }
 
-        if (s.children[0]!.color == 0 && s.children[1]!.color == 0) {
-          s.color = 1;
+        if (s.children[0]!.color == 1 && s.children[1]!.color == 1) {
+          s.color = 0;
           node = node.parent!;
         }
         else {
-          if (s.children[1]!.color == 0) {
-            s.children[0]!.color = 0;
-            s.color = 1;
+          if (s.children[1]!.color == 1) {
+            s.children[0]!.color = 1;
+            s.color = 0;
             this.rightRotate(s);
             s = node.parent!.children[1]!;
           }
 
           s.color = node.parent!.color;
-          node.parent!.color = 0;
-          s.children[1]!.color = 0;
+          node.parent!.color = 1;
+          s.children[1]!.color = 1;
           this.leftRotate(node.parent!);
           node = this.root;
         }
       } else {
         let s = node.parent!.children[1]!;
 
-        if (s.color == 1) {
-          s.color = 0;
-          node.parent!.color = 1;
+        if (s.color == 0) {
+          s.color = 1;
+          node.parent!.color = 0;
           this.rightRotate(node.parent!);
           s = node.parent!.children[0]!;
         }
 
-        if (s.children[1]!.color == 0 && s.children[0]!.color == 0) {
-          s.color = 1;
+        if (s.children[1]!.color == 1 && s.children[0]!.color == 1) {
+          s.color = 0;
           node = node.parent!;
         }
         else {
-          if (s.children[0]!.color == 0) {
-            s.children[1]!.color = 0;
-            s.color = 1;
+          if (s.children[0]!.color == 1) {
+            s.children[1]!.color = 1;
+            s.color = 0;
             this.leftRotate(s);
             s = node.parent!.children[0]!;
           }
 
           s.color = node.parent!.color;
-          node.parent!.color = 0;
-          s.children[0]!.color = 0;
+          node.parent!.color = 1;
+          s.children[0]!.color = 1;
           this.rightRotate(node.parent!);
           node = this.root!;
         }
       }
     }
 
-    node.color = 0;
+    node.color = 1;
   }
 
   minimum(node: TreeNode) {
@@ -398,39 +398,43 @@ export class RedBlackTree {
     }
   }
 
-  printPreOrder(node: TreeNode, result: string[]) {
+  printPreorder(node: TreeNode, level: number, side: number, result: string[]) {
     if (node != this.nil) {
       // process.stdout.write(node.key.word + " - " + node.key.translated + " ");
       // console.log(node.key.word + " → " + node.key.translated);
-      result.push(node.key.word + " → " + node.key.translated);
-      this.printPreOrder(node.children[0]!, result);
-      this.printPreOrder(node.children[1]!, result);
+      
+      // result.push(node.key.word + " → " + node.key.translated);
+      result.push("level=" + level + " child" + side + " " + node.key.word + " → " + node.key.translated + " " + (node.color == 0 ? "(RED)": "(BLACK)"));
+      this.printPreorder(node.children[0]!, level + 1, 0, result);
+      this.printPreorder(node.children[1]!, level + 1, 1, result);
+    } else {
+      result.push("level=" + level + " child" + side + " null");
     }
   }
 
-  printInOrder(node: TreeNode, result: string[]) {
+  printInorder(node: TreeNode, result: string[]) {
     if (node != this.nil) {
-      this.printInOrder(node.children[0]!, result);
+      this.printInorder(node.children[0]!, result);
       // process.stdout.write(node.key.word + " - " + node.key.translated + " ");
       // console.log(node.key.word + " → " + node.key.translated);
       result.push(node.key.word + " → " + node.key.translated);
-      this.printInOrder(node.children[1]!, result);
+      this.printInorder(node.children[1]!, result);
     }
   }
  
-  printPostOrder(node: TreeNode, result: string[]) {
+  printPostorder(node: TreeNode, result: string[]) {
     if (node != this.nil) {
-      this.printPostOrder(node.children[0]!, result);
-      this.printPostOrder(node.children[1]!, result);
+      this.printPostorder(node.children[0]!, result);
+      this.printPostorder(node.children[1]!, result);
       // process.stdout.write(node.key.word + " - " + node.key.translated + " ");
       // console.log(node.key.word + " → " + node.key.translated);
       result.push(node.key.word + " → " + node.key.translated);
     }
   }
 
-  printInOrder2(node: TreeNode, startNode: TreeNode, endNode: TreeNode, result: string[], startFound: boolean[]) {
+  printInorder2(node: TreeNode, startNode: TreeNode, endNode: TreeNode, result: string[], startFound: boolean[]) {
     if (node != this.nil) {
-      this.printInOrder2(node.children[0]!, startNode, endNode, result, startFound);
+      this.printInorder2(node.children[0]!, startNode, endNode, result, startFound);
       // process.stdout.write(node.key.word + " - " + node.key.translated + " ");
       // console.log(node.key.word + " → " + node.key.translated);
       if (node == startNode) {
@@ -444,7 +448,7 @@ export class RedBlackTree {
         return;
       }
       
-      this.printInOrder2(node.children[1]!, startNode, endNode, result, startFound);
+      this.printInorder2(node.children[1]!, startNode, endNode, result, startFound);
     }
   }
 }

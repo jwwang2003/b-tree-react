@@ -1,12 +1,13 @@
 import { useEffect } from "react"
 import { Dispatch, SetStateAction } from "react";
 
-export default function TreeSelect({currentState, setState}: {currentState: string, setState: Dispatch<SetStateAction<string>> }) {
+export default function TreeSelect({onChange, currentState, setState}: {onChange: () => void, currentState: string, setState: Dispatch<SetStateAction<string>> }) {
   // const [currentState, setState] = useState("")
   
   const onOptionChange = (e: React.ChangeEvent<any>) => {
     setState(e.target.value);
     console.log("Value changed " + e.target.value);
+    onChange();
   }
 
   useEffect(() => {

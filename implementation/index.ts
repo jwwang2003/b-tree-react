@@ -1,6 +1,7 @@
 import { TranslateNode, RedBlackTree } from './redBlackTree';
-
+import {BTree} from './BTree.js';
 import { BilingualDictionary } from './bilingualDictionary';
+import { BTreeBilingualDictionary } from './bTreeBilingualDictionary';
 import * as fs from 'fs';
 
 // let tree = new RedBlackTree()
@@ -29,7 +30,12 @@ import * as fs from 'fs';
 //            R---- 7-(BLACK)
 //                 R---- 8-(RED)
 
-// let tree = new RedBlackTree()
+let tree = new RedBlackTree()
+tree.insert(new TranslateNode('7', '7'));
+tree.insert(new TranslateNode('3', '3'));
+tree.insert(new TranslateNode('5', '5'));
+tree.insert(new TranslateNode('1', '1'));
+tree.insert(new TranslateNode('6', '6'));
 // tree.insert(new TranslateNode('a', ''))
 // tree.insert(new TranslateNode('b', ''))
 // tree.insert(new TranslateNode('e', ''))
@@ -40,7 +46,21 @@ import * as fs from 'fs';
 // tree.insert(new TranslateNode('h', ''))
 // tree.insert(new TranslateNode('i', ''))
 // tree.insert(new TranslateNode('j', ''))
-// tree.printTree()
+
+var test = new BTree();
+test.add([7, 7]);
+test.add([3, 2]);
+test.add([5, 1]);
+test.add([1, 2]);
+test.add([6, 3]);
+console.log(test.search(3));
+console.log(test.preorderPrint());
+console.log(test.inorderPrint());
+
+console.log(tree.printTree());
+let result: string[] = [];
+tree.printPreorder(tree.root, 0, 0, result);
+console.log(result);
 
 // Console log output
 // R---- d-(BLACK)
@@ -56,29 +76,34 @@ import * as fs from 'fs';
 
 
 // Testing English to Chinese and Chinese to English translation
-let dict = new BilingualDictionary();
-const fileInput = fs.readFileSync('Translate.txt', 'utf-8');
-const words:string[] = fileInput.split("\r\n")
+// let dict = new BilingualDictionary();
+// let bDict = new BTreeBilingualDictionary;
 
-for (const word of words) {
-  const translate: string[] = word.split(" ");
+// const fileInput = fs.readFileSync('Translate.txt', 'utf-8');
+// const words:string[] = fileInput.split("\r\n")
 
-  dict.addTranslation(translate[0], translate[1]);
-}
+// for (const word of words) {
+//   const translate: string[] = word.split(" ");
 
-console.log(dict.search("curiosity"));
-console.log(dict.search("好奇心"));
-console.log(dict.searchChinese("炮塔"));
-console.log(dict.search('啊'));
+//   // dict.addTranslation(translate[0], translate[1]);
+//   bDict.addTranslation(translate[0], translate[1]);
+// }
 
-console.log(dict.deleteTranslation("curiosity"));
-console.log(dict.deleteTranslation("好奇心"));
+// console.log(bDict.enToCnTree.inorderPrint());
 
-console.log(dict.search('curiosity'))
-console.log(dict.search('好奇心'))
-console.log(dict.search('好奇地'))
+// console.log(dict.search("curiosity"));
+// console.log(dict.search("好奇心"));
+// console.log(dict.searchChinese("炮塔"));
+// console.log(dict.search('啊'));
 
-console.log(dict.enToCnTree.printTree());
+// console.log(dict.deleteTranslation("curiosity"));
+// console.log(dict.deleteTranslation("好奇心"));
+
+// console.log(dict.search('curiosity'))
+// console.log(dict.search('好奇心'))
+// console.log(dict.search('好奇地'))
+
+// console.log(dict.enToCnTree.printTree());
 
 // Console output
 // <ref *2> TreeNode {

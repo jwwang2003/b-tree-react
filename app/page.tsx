@@ -4,18 +4,17 @@ import { useState, useRef, FormEvent, ChangeEvent } from "react";
 import TreeSelect from "@/components/TreeSelect";
 import Footer from "@/components/Footer";
 import Container from "@/components/Container";
-// import TreeGraph from "@/components/TreeGraph";
-// import ParentSize from "@visx/responsive/lib/components/ParentSize";
 import TextInput from "@/components/TextInput";
 import BigButton from "@/components/BigButton";
 import Divider from "@/compoennts/Divider";
 import toast, { Toaster } from "react-hot-toast";
 import { BilingualDictionary } from "@/implementation/bilingualDictionary";
+import { BTreeBilingualDictionary } from "@/implementation/bTreeBilingualDictionary";
 import Output from "@/components/Output";
 
 export default function Home() {
   const [outputMode, setOutputMode] = useState(0);
-  const [dictChanged, setDictChanged] = useState<boolean[]>([]);
+  // const [dictChanged, setDictChanged] = useState<boolean[]>([]);
   const [outputLog, setOutputLog] = useState<string[][]>([[], [], [], [], []]);
 
   const [current, setCurrent] = useState("");
@@ -23,6 +22,7 @@ export default function Home() {
   const [dictionary, setDictionary] = useState<BilingualDictionary>(
     new BilingualDictionary()
   );
+  const [bDictionary, setBDictionary] = useState(new BTreeBilingualDictionary());
 
   const inputExternalFileRef = useRef<any>();
   const inputExternalBatchFileRef = useRef<any>();
@@ -30,6 +30,37 @@ export default function Home() {
   const inputRangeSearchRef = useRef<any>();
 
   const [submitType, setSubmitType] = useState("");
+
+  const helperSerach = (translate: string) => {
+    const start = performance.now();
+    let translated;
+    if(current == "Red Black Tree") {
+      translated = dictionary.search(translate);
+    } else {
+      translated = bDictionary.search(translate);
+    }
+    const end = performance.now();
+    console.log(`Execution time: ${end - start} ms`);
+
+    if (translated === undefined || translated === null) {
+      toast.error("Word not found");
+      return undefined;
+    } else {
+      
+      let A, B;
+      if(current == "Red Black Tree") {
+        A = translated.key.word;
+        B = translated.key.translated;
+      } else {
+        A = translated[0];
+        B = translated[1];
+      }
+
+      toast.success("Word found");
+      outputLog[4].push(A + " →  " + B);
+      return translated;
+    }
+  }
 
   const handleSearch = (e: FormEvent<HTMLFormElement> | undefined) => {
     if (e != undefined) e.preventDefault();
@@ -39,22 +70,17 @@ export default function Home() {
       return;
     }
 
-    const start = performance.now();
-    const translated = dictionary.search(translate);
-    const end = performance.now();
-    console.log(`Execution time: ${end - start} ms`);
+    let translated = helperSerach(translate);
 
-    if (translated === undefined) {
-      // Debugging purposes
-      // console.log("NOT FOUND");
-      // console.log(translated);
-
-      toast.error("Word not found");
-    } else {
-      const A = translated.key.word;
-      const B = translated.key.translated;
-
-      toast.success("Word found");
+    if(translated) {
+      let A, B;
+      if(current == "Red Black Tree") {
+        A = translated.key.word;
+        B = translated.key.translated;
+      } else {
+        A = translated[0];
+        B = translated[1];
+      }
       setTranslate(A + " →  " + B);
     }
   };
@@ -77,8 +103,15 @@ export default function Home() {
     }
 
     console.log("-=-=-=-=-=-=-ENTERED RANGE SEARCH-=-=-=-=-=-=-");
-    const result1 = dictionary.search(startKey);
-    const result2 = dictionary.search(endKey);
+    let result1, result2;
+
+    if(current == "Red Black Tree") {
+      result1 = dictionary.search(startKey);
+      result2 = dictionary.search(endKey);
+    } else {
+      result1 = bDictionary.search(startKey);
+      result2 = bDictionary.search(endKey);
+    }
 
     // DEBUGGING
     // console.log(result1);
@@ -94,22 +127,22 @@ export default function Home() {
       return;
     }
     let result: string[] = [];
-    dictionary.enToCnTree.printInOrder2(dictionary.enToCnTree.root, result1, result2, result, [false]);
+    if(current == "Red Black Tree") {
+      dictionary.enToCnTree.printInorder2(dictionary.enToCnTree.root, result1, result2, result, [false]);
+    } else {
+      bDictionary.enToCnTree.inorderPrint2(result1[0], result2[0], result, [false])!;
+    }
+    
     console.log(result);
-    outputLog[outputMode] = result;
+
+    outputLog[4] = outputLog[4].concat(result);
     setOutputLog([...outputLog])
+
     toast.success("Found " + result.length + " words");
     console.log("-=-=-=-=-=-=-EXITED RANGE SEARCH-=-=-=-=-=-=-");
   };
 
   // -=-=-=-=-=-=-=-=-=-=- FILE I/O -=-=-=-=-=-=-=-=-=-=-
-
-  const toggleDictionaryChange = () => {
-    for (let i = 0; i < 5; ++i) {
-      dictChanged[i] = true;
-    }
-    setDictChanged([...dictChanged]);
-  };
 
   const handleExternalFile = (
     event: ChangeEvent<HTMLInputElement> | undefined
@@ -133,7 +166,12 @@ export default function Home() {
       for (let line = 0; line < lines.length; line++) {
         let words = lines[line].trim().split(" ");
         console.log(words);
-        dictionary!.addTranslation(words[0], words[1]);
+
+        if(current == "Red Black Tree") {
+          dictionary!.addTranslation(words[0], words[1]);
+        } else {
+          bDictionary!.addTranslation(words[0], words[1]);
+        }
       }
 
       toggleDictionaryChange();
@@ -165,11 +203,15 @@ export default function Home() {
       let mode = 0;
       let ref = ["INSERTION MODE", "DELETION MODE", "SERACH MODE"];
 
+      let counter = 0;
+      let errCounter = 0;
+
       let lines = text!.toString().split("\n");
+
       for (let line = 0; line < lines.length; line++) {
-        if (lines[line] == "") continue;
+        if (lines[line].trim() == "") continue;
         if (line == 0) {
-          switch (lines[line]) {
+          switch (lines[line].trim()) {
             case "INSERT":
               mode = 0;
               break;
@@ -187,23 +229,31 @@ export default function Home() {
 
         let words = lines[line].trim().split(" ");
         console.log(words);
+        const word = words[0] || words[1];
+        console.log(word);
 
         switch (mode) {
           case 0:
+            if(checkExist(words[0], words[1])) { console.log("ERROR " + words); errCounter++; break;}
+            dictionary!.addTranslation(words[0], words[1]);
+            counter++;
             break;
           case 1:
+            const result = dictionary!.deleteTranslation(word);
+            if (result) { counter++ } else { errCounter++; }
             break;
           case 2:
+            if (helperSerach(word)) { counter++ } else { errCounter++; }
             break;
         }
-
-        // dictionary!.addTranslation(words[0], words[1]);
       }
 
       toggleDictionaryChange();
 
       setDictionary(dictionary);
-      toast.success("Batch processed " + lines.length + " items");
+      toast.success("Batch processed " + (lines.length - 1) + " item(s)");
+      toast("Successfully processed " + counter + " item(s)");
+      if (errCounter) toast.error("Could not process " + errCounter + " item(s)");
 
       console.log("-=-=-=-=-=-=-EXITED BATCH METHOD-=-=-=-=-=-=-");
     };
@@ -215,10 +265,20 @@ export default function Home() {
 
   // -=-=-=-=-=-=-=-=-=-=- START OF ADD/DELETE -=-=-=-=-=-=-=-=-=-=-
 
+  const checkExist = (english: string, chinese: string) => {
+    const result1 = dictionary.search(english);
+    const result2 = dictionary.search(chinese);
+
+    if (result1 || result2) {
+      return true;
+    }
+    return false;
+  }
+
   const handleAddDelete = (e: FormEvent<HTMLFormElement> | undefined) => {
     if (e != undefined) e.preventDefault();
     else return;
-
+    console.log(dictionary);
     const target = e.target as typeof e.target & {
       english: { value: string };
       chinese: { value: string };
@@ -235,16 +295,19 @@ export default function Home() {
         return;
       }
 
-      const result1 = dictionary.search(english);
-      const result2 = dictionary.search(chinese);
-
-      if (result1 || result2) {
+      if (checkExist(english, chinese)) {
         toast.error("Word exists");
         return;
       }
 
-      dictionary!.addTranslation(english, chinese);
-      setDictionary(dictionary);
+      if(current == "Red Black Tree") {
+        dictionary!.addTranslation(english, chinese);
+        setDictionary(dictionary);
+      } else {
+        bDictionary!.addTranslation(english, chinese);
+        setBDictionary(bDictionary);
+      }
+      
 
       toast.success(
         "Translation for " + english + " → " + chinese + " inserted"
@@ -256,13 +319,14 @@ export default function Home() {
         return;
       }
 
-      const result = dictionary!.deleteTranslation(english);
+      const word = english || chinese;
+      const result = dictionary!.deleteTranslation(word);
 
       if (result) {
+        toast.success("Translation for " + word + " deleted");
         toggleDictionaryChange();
-        toast.success("Translation for " + english + " deleted");
       } else {
-        toast.error("Translation for " + english + " not found");
+        toast.error("Translation for " + word + " not found");
       }
     } else {
       toast.error("Unrecongized command " + type);
@@ -271,144 +335,92 @@ export default function Home() {
 
   //  -=-=-=-=-=-=-=-=-=-=- END OF ADD/DELETE -=-=-=-=-=-=-=-=-=-=-
 
-  const handlePrintPreorder = () => {
+  const toggleDictionaryChange = () => {
+    // Update all output data
+    handleLoadPreorder();
+    handleLoadInorder();
+    handleLoadPostorder();
+    handleLoadTree();
+    handleLoadResults();
+    toast.success("Dictionary updated");
+  };
+
+  const handleLoadPreorder = () => {
     const mode = 0;
-    outputHelper(mode);
-  };
-
-  const handlePrintInOrder = () => {
+    let result: string[] = [];
+    if(current == "Red Black Tree") {
+      dictionary.enToCnTree.printPreorder(
+        dictionary.enToCnTree.root,
+        0,
+        0,
+        result
+      );
+    } else {
+      result[0] = bDictionary.enToCnTree.preorderPrint();
+    }
+    
+    outputLog[mode] = result;
+    // Update output log
+    setOutputLog([...outputLog]);
+  }
+  
+  const handleLoadInorder = () => {
     const mode = 1;
-    outputHelper(mode);
-  };
+    let result: string[] = [];
+    if(current == "Red Black Tree") {
+      dictionary.enToCnTree.printInorder(
+        dictionary.enToCnTree.root,
+        result
+      );
+    } else {
+      result = bDictionary.enToCnTree.inorderPrint();
+    }
+   
+    outputLog[mode] = result;
+    // Update output log
+    setOutputLog([...outputLog]);
+  }
 
-  const handlePrintPostOrder = () => {
+  const handleLoadPostorder = () => {
     const mode = 2;
-    outputHelper(mode);
-  };
+    let result: string[] = [];
+    if(current == "Red Black Tree") {
+      dictionary.enToCnTree.printPostorder(
+        dictionary.enToCnTree.root,
+        result
+      );
+    } else {
+      result = bDictionary.enToCnTree.postorderPrint();
+    }
+    
+    outputLog[mode] = result;
+    // Update output log
+    setOutputLog([...outputLog]);
+  }
 
-  const handlePrintTree = () => {
+  const handleLoadTree = () => {
     const mode = 3;
-    outputHelper(mode);
-  };
+    let result: string[] = [];
 
-  const handleShowResults = () => {
-    const mode = 4;
-    outputHelper(mode);
-  };
-
-  const outputHelper = (mode: number) => {
-    let output: string = "";
-
-    if (outputMode == mode && dictChanged[mode] == false) {
-      // still the same page and the dictionary has not been mofidied, nothing needs to be done
-      return;
+    if(current == "Red Black Tree") {
+      result = dictionary.enToCnTree.printTree();
+    } else {
+      result = [];
     }
+    
+    outputLog[mode] = result;
+    // Update output log
+    setOutputLog([...outputLog]);
+  }
 
-    if (dictChanged[mode] == true) {
-      let result: string[] = [];
+  const handleLoadResults = () => {
+    // nothing here...
+  }
 
-      switch (mode) {
-        case 0:
-          dictionary.enToCnTree.printPreOrder(
-            dictionary.enToCnTree.root,
-            result
-          );
-          break;
-        case 1:
-          dictionary.enToCnTree.printInOrder(
-            dictionary.enToCnTree.root,
-            result
-          );
-          break;
-        case 2:
-          dictionary.enToCnTree.printPostOrder(
-            dictionary.enToCnTree.root,
-            result
-          );
-          break;
-        case 3:
-          result = dictionary.enToCnTree.printTree();
-          break;
-        case 4:
-          break;
-        default:
-          break;
-      }
-
-      switch (mode) {
-        case 0:
-          output += "Preorder";
-          break;
-        case 1:
-          output += "Inorder";
-          break;
-        case 2:
-          output += "Postorder";
-          break;
-        case 3:
-          output += "Tree";
-          break;
-        case 4:
-          break;
-        default:
-          break;
-      }
-
-      outputLog[mode] = result;
-      setOutputLog([...outputLog]);
-      dictChanged[mode] = false;
-      setDictChanged([...dictChanged]);
-      toast(output + " updated");
-    }
-
-    if (outputMode != mode) {
-      setOutputMode(mode);
-
-      switch (mode) {
-        case 0:
-          console.log("-=-=-=-=-=-=-PREORDER-=-=-=-=-=-=-");
-          break;
-        case 1:
-          console.log("-=-=-=-=-=-=-INORDER-=-=-=-=-=-=-");
-          break;
-        case 2:
-          console.log("-=-=-=-=-=-=-POSTORDER-=-=-=-=-=-=-");
-          break;
-        case 3:
-          console.log("-=-=-=-=-=-=-TREE-=-=-=-=-=-=-");
-          break;
-        case 4:
-          break;
-        default:
-          break;
-      }
-
-      let output = "";
-      switch (mode) {
-        case 0:
-          output += "Preorder";
-          break;
-        case 1:
-          output += "Inorder";
-          break;
-        case 2:
-          output += "Postorder";
-          break;
-        case 3:
-          output += "Tree";
-          break;
-        // case 4: output += 'Results'; break;
-        case 4:
-          return;
-        default:
-          break;
-      }
-
-      console.log(outputLog[mode]);
-
-      toast.success(output + " console logged");
-    }
-  };
+  const handleTreeChange =  () => {
+    setBDictionary(new BTreeBilingualDictionary());
+    setDictionary(new BilingualDictionary());
+  }
 
   return (
     <>
@@ -475,7 +487,7 @@ export default function Home() {
 
             <section className="p-2 w-full">
               <div className="flex flex-col space-y-4">
-                <TreeSelect currentState={current} setState={setCurrent} />
+                <TreeSelect onChange={handleTreeChange} currentState={current} setState={setCurrent} />
 
                 <Divider />
 
@@ -524,14 +536,10 @@ export default function Home() {
         {/* Tree Graph Component */}
         <Container fullWidth={true}>
           <Output
-            handlePrintInOrder={handlePrintInOrder}
-            handlePrintPostOrder={handlePrintPostOrder}
-            handlePrintPreOrder={handlePrintPreorder}
-            handlePrintTree={handlePrintTree}
-            handleShowResults={handleShowResults}
+            setMode={setOutputMode}
             mode={outputMode}
+            toggleRefresh={toggleDictionaryChange}
             log={outputLog}
-            dictionaryChange={dictChanged}
           />
 
           {/* This graph UI library is way to laggy for big graphs, therefore only a text based method would be used */}
