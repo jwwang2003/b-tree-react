@@ -130,7 +130,8 @@ export default function Home() {
     if(current == "Red Black Tree") {
       dictionary.enToCnTree.printInorder2(dictionary.enToCnTree.root, result1, result2, result, [false]);
     } else {
-      bDictionary.enToCnTree.inorderPrint2(result1[0], result2[0], result, [false])!;
+      console.log(bDictionary.enToCnTree.inorderPrint2(result1, result2));
+      // bDictionary.enToCnTree.inorderPrint2(result1[0], result2[0], result, [false])!;
     }
     
     console.log(result);

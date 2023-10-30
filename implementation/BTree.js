@@ -426,9 +426,9 @@ BTreeNode.prototype.preorderPrint = function (level, child) {
   }
 
   var result = '';
-  
+
   for (var i = 0; i <= this.keyCount(); i++) {
-    if(i == 0) {
+    if (i == 0) {
       result += 'level=' + level + ' child=' + child + ' /';
     }
 
@@ -473,35 +473,6 @@ BTreeNode.prototype.inorderPrint = function () {
 
 BTree.prototype.inorderPrint = function () {
   return this._root.inorderPrint();
-};
-
-BTreeNode.prototype.inorderPrint2 = function (startNode, endNode, result, startFound) {
-  if (!this) {
-    return [];
-  }
-
-  for (var i = 0; i <= this.keyCount(); i++) {
-    console.log(this._childs[i]);
-    if (this._childs[i][0] == startNode) {
-      startFound[0] = true;
-      console.log('test');
-    }
-    if (this._childs[i][0] == endNode) break;
-    if (this._childs[i] && startFound[0] == true) {
-      result = result.concat(this._childs[i].inorderPrint());
-    }
-
-    if (i < this.keyCount() && startFound[0] == true) {
-      result.push(this._keys[i]);
-    }
-  }
-
-  return result;
-}
-
-
-BTree.prototype.inorderPrint2 = function (startNode, endNode, result, startFound) {
-  return this._root.inorderPrint2(startNode, endNode, result, startFound);
 };
 
 BTreeNode.prototype.postorderPrint = function () {
@@ -559,6 +530,65 @@ BTreeNode.prototype.search = function (key) {
 BTree.prototype.search = function (key) {
   // Start the search from the root node
   return this._root.search(key);
+};
+
+// BTree.prototype.inorderPrint2 = function (startKey, endKey) {
+//   const results = [];
+//   this._inorderPrint2(this._root, startKey, endKey, results);
+//   return results;
+// };
+
+// BTree.prototype._inorderPrint2 = function (node, startKey, endKey, results) {
+//   if (node) {
+//       let i = 0;
+
+//       while (i < node.keyCount() && node.key(i) < startKey) {
+//           i++;
+//       }
+
+//       while (i < node.keyCount() && node.key(i) <= endKey) {
+//           this._inorderPrint2(node.child(i), startKey, endKey, results);
+//           if (node.key(i) >= startKey) {
+//               results.push(node.key(i));
+//           }
+//           i++;
+//       }
+
+//       this._inorderPrint2(node.child(i), startKey, endKey, results);
+//   }
+// };
+
+BTreeNode.prototype.inorderPrint2 = function (startNode, endNode, result, startFound) {
+  if (!this) {
+    return result;
+  }
+  
+  for (var i = 0; i <= this.keyCount(); i++) {
+    if (this._childs[i]) {
+      if (this._keys[i] == endNode) {
+        return result;
+      }
+      result = result.concat(this._childs[i].inorderPrint2(startNode, endNode, [], startFound));
+    }
+
+    if (i < this.keyCount()) {
+      if (this._keys[i] == startNode) {
+        startFound[0] = true;
+      }
+      if (startFound[0] == true) {
+        result.push(this._keys[i]);
+      }
+    }
+  }
+
+  return result;
+};
+
+BTree.prototype.inorderPrint2 = function (startNode, endNode) {
+  const result = [];
+  const startFound = [false]; // Flag to indicate when the startNode is found
+  this._root.inorderPrint2(startNode, endNode, result, startFound);
+  return result;
 };
 
 // ------------------------------------

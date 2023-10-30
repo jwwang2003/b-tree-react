@@ -6,7 +6,9 @@
   "scripts": {
     "build": "npx tsc",
     "start": "node dist/index.js",
-    "dev": "nodemon index.ts"
+    "dev": "nodemon index.ts",
+    "benchBTree": "nodemon BTreeBench.ts",
+    "benchRBTree": "nodemon RBTreeBench.ts"
   },
   "author": "",
   "license": "ISC",

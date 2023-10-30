@@ -18,14 +18,10 @@ export class BTreeBilingualDictionary {
   }
 
   deleteTranslation(key) {
-    const enRoot = this.enToCnTree._root;
-    const cnRoot = this.cnToEnTree._root;
-
     const search1 = this.enToCnTree.search(key);
     const search2 = this.cnToEnTree.search(key);
 
     const test = search1 && search2 === null ? 1 : 0;
-
     let result1 = false;
     let result2 = false;
 
@@ -33,17 +29,17 @@ export class BTreeBilingualDictionary {
       // the key is a word in the English dictionary that translates to Chinese
       // const english = new TranslateNode(search1.keys[0], '');
       // const chinese = new TranslateNode(search1.keys[1], '');
-      result1 = this.enToCnTree.delete(enRoot, [search1.keys[0], '']);
-      result2 = this.cnToEnTree.delete(cnRoot, [search1.keys[1], '']);
+      result1 = this.enToCnTree.remove([search1[0], '']);
+      result2 = this.cnToEnTree.remove([search1[1], '']);
     }
     else if (test == 0 && search2 !== null) {
       // the key is a word in the Chinese dictionary that translates to English
       // const english = new TranslateNode(search2.keys[1], '');
       // const chinese = new TranslateNode(search2.keys[0], '');
-      result1 = this.enToCnTree.delete(enRoot, [search1.keys[1], '']);
-      result2 = this.cnToEnTree.delete(cnRoot, [search1.keys[0], '']);
+      result1 = this.enToCnTree.remove([search2[1], '']);
+      result2 = this.cnToEnTree.remove([search2[0], '']);
     }
-
+   
     return result1 && result2;
   }
 

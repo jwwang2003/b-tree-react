@@ -48,12 +48,16 @@ tree.insert(new TranslateNode('6', '6'));
 // tree.insert(new TranslateNode('j', ''))
 
 var test = new BTree();
-test.add([7, 7]);
-test.add([3, 2]);
-test.add([5, 1]);
-test.add([1, 2]);
-test.add([6, 3]);
-console.log(test.search(3));
+// test.add([7, 7]);
+// test.add([3, 2]);
+// test.add([5, 1]);
+// test.add([1, 2]);
+// test.add([6, 3]);
+test.add(['test', '测试']);
+test.add(['example', '例子']);
+console.log(test.search('测试'));
+test.remove(['test']);
+console.log(test.search('test'));
 console.log(test.preorderPrint());
 console.log(test.inorderPrint());
 
